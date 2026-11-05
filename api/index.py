@@ -29,6 +29,7 @@ from utils.nutrition import (
 )
 
 app = FastAPI(title="VitaBite API", version="1.0.0")
+handler = app
 
 # Enable CORS for Vercel deployments and local testing
 app.add_middleware(
