@@ -42,40 +42,46 @@ VitaBite/
 
 ---
 
-## Setup & Running Instructions
+## Deploying Directly on Vercel (via GitHub)
 
-### 1. Prerequisites
-- Python 3.10+ installed.
+VitaBite is fully configured for **1-click deployment on Vercel**:
 
-### 2. Clone / Open Directory
+### 1. Push code to your GitHub Repository:
 ```bash
-cd VitaBite
+git init
+git add .
+git commit -m "VitaBite Vercel Ready"
+git branch -M main
+git remote add origin https://github.com/<your-username>/VitaBite.git
+git push -u origin main
 ```
 
-### 3. Install Dependencies
+### 2. Deploy on Vercel:
+1. Go to **[vercel.com](https://vercel.com)** and click **"Add New Project"**.
+2. Select and import your **`VitaBite`** repository from GitHub.
+3. Keep the default settings (Vercel automatically detects `vercel.json` and Python backend in `api/index.py`).
+4. Under **Environment Variables**, add:
+   - **Name:** `GEMINI_API_KEY`
+   - **Value:** `your_gemini_api_key_here`
+5. Click **Deploy**.
+
+Vercel will build and launch your application with a public `https://vitabite-*.vercel.app` URL!
+
+---
+
+## Running Locally
+
+### Option 1: Fast Full-Stack App (Vercel Simulation)
 ```bash
-pip install -r requirements.txt
+uvicorn api.index:app --reload --port 8000
 ```
+Open `public/index.html` or visit `http://localhost:8000`.
 
-### 4. Configure Google Gemini API Key
-Obtain a free API key from [Google AI Studio](https://aistudio.google.com/).
-
-Copy the template:
-```bash
-cp .env.example .env
-```
-Open `.env` and set your key:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-*(Alternatively, you can also paste your Gemini API key directly into the sidebar in the VitaBite web application).*
-
-### 5. Launch the Website
+### Option 2: Streamlit Interface
 ```bash
 streamlit run app.py
 ```
-
-The application will automatically open in your default browser at `http://localhost:8501`.
+Open `http://localhost:8501`.
 
 ---
 

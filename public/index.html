@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitaBite — Understand Your Nutrition</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #FFFFFF;
+      --bg-secondary: #F8F8F8;
+      --card-bg: #F2F2F2;
+      --border-color: #E5E5E5;
+      --text-primary: #111111;
+      --text-secondary: #777777;
+      --btn-primary: #000000;
+      --btn-text: #FFFFFF;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Minimal Navbar */
+    header {
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-main);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      text-decoration: none;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .brand-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.4rem 0.6rem;
+      transition: color 0.2s ease;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      color: var(--text-primary);
+    }
+
+    .btn-key {
+      font-size: 0.85rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    /* Tab Page Views */
+    .page-view {
+      display: none;
+      padding: 3rem 0;
+    }
+
+    .page-view.active {
+      display: block;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--btn-primary);
+      color: var(--btn-text);
+      border: 1px solid var(--btn-primary);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 0.65rem 1.6rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn:hover {
+      background-color: #222222;
+      border-color: #222222;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-secondary);
+      border-color: var(--text-primary);
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+    }
+
+    /* Hero Section */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero-content span {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+    }
+
+    .hero-content h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -1.2px;
+      line-height: 1.15;
+      margin: 0.5rem 0 1rem 0;
+    }
+
+    .hero-content h2 {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .hero-content p {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .hero-image-wrap {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+    }
+
+    .hero-image-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .hero-image-caption {
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* 3 Feature Cards */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2rem 1.5rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .feature-card:hover {
+      border-color: #CCCCCC;
+    }
+
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Sub-tabs for Analysis */
+    .tab-bar {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+      padding: 0.8rem 1.4rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--text-primary);
+    }
+
+    .analysis-panel {
+      display: none;
+    }
+
+    .analysis-panel.active {
+      display: block;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-text {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: inherit;
+    }
+
+    .input-text:focus {
+      outline: none;
+      border-color: var(--text-primary);
+      background-color: #FFFFFF;
+    }
+
+    /* Upload Box */
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background-color: var(--bg-secondary);
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .upload-area:hover {
+      border-color: var(--text-primary);
+    }
+
+    .preview-box {
+      max-width: 320px;
+      margin: 1.5rem auto;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      display: none;
+    }
+
+    .preview-box img {
+      width: 100%;
+      display: block;
+    }
+
+    /* 4 Macro Cards */
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin: 2rem 0;
+    }
+
+    .macro-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .macro-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .macro-val {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .macro-unit {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    /* Breakdown Table */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-secondary);
+      padding: 0.8rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: #EAEAEA;
+      color: var(--text-primary);
+    }
+
+    /* Suggestion Box */
+    .suggestion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+
+    .suggestion-box {
+      background-color: var(--bg-secondary);
+      border-left: 3px solid var(--text-primary);
+      border-radius: 0 6px 6px 0;
+      padding: 1.2rem 1.4rem;
+    }
+
+    .suggestion-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+    }
+
+    .suggestion-text {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .disclaimer {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+      margin-top: 2rem;
+      line-height: 1.5;
+    }
+
+    /* Results layout */
+    .results-layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    /* Modal / Dialog */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: 8px;
+      max-width: 480px;
+      width: 90%;
+      padding: 2rem;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #FFFFFF;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2.5rem 0;
+      margin-top: 4rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .hero-grid, .results-layout, .suggestion-grid, .features-grid, .macro-grid {
+        grid-template-columns: 1fr;
+      }
+      .navbar {
+        height: auto;
+        padding: 1rem 0;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .footer-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Minimal Header -->
+  <header>
+    <div class="container navbar">
+      <div class="brand" onclick="switchNav('home')">
+        <span class="brand-title">VitaBite</span>
+        <span class="brand-subtitle">Nutrition Intelligence</span>
+      </div>
+      <ul class="nav-links">
+        <li><button class="nav-btn active" id="btn-nav-home" onclick="switchNav('home')">Home</button></li>
+        <li><button class="nav-btn" id="btn-nav-analysis" onclick="switchNav('analysis')">Food Analysis</button></li>
+        <li><button class="nav-btn" id="btn-nav-about" onclick="switchNav('about')">About</button></li>
+        <li><button class="btn-key" onclick="openKeyModal()">⚙ API Key</button></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- PAGE: HOME -->
+    <section id="page-home" class="page-view active">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <span>VitaBite</span>
+          <h1>Eat Better.<br>Understand Your Nutrition.</h1>
+          <h2>Your AI-powered food and nutrition companion.</h2>
+          <p>Discover the nutritional value of your meals and make smarter food choices with AI.</p>
+          <button class="btn" onclick="switchNav('analysis')">Analyze Your Food</button>
+        </div>
+        <div class="hero-image-wrap">
+          <img src="/assets/sample_meal.jpg" alt="Wholesome Indian Meal" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80';">
+          <div class="hero-image-caption">Wholesome meal: Rotis, Yellow Dal, Steamed Rice, Cucumber & Banana</div>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <div class="feature-title">Food Recognition</div>
+          <div class="feature-desc">Identify food items and estimated portions from meal photographs using Google Gemini AI.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Nutrition Analysis</div>
+          <div class="feature-desc">Accurately calculate calories, protein, carbohydrates, and fat using verified food nutritional data.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💡</div>
+          <div class="feature-title">Smart Suggestions</div>
+          <div class="feature-desc">Get simple, practical, AI-powered nutritional recommendations and affordable staple alternatives.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: FOOD ANALYSIS -->
+    <section id="page-analysis" class="page-view">
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.4rem;">Food Analysis</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select your preferred method to analyze meal nutrition.</p>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-opt-a" onclick="switchAnalysisTab('a')">Option A: Enter Food Manually</button>
+        <button class="tab-btn" id="tab-opt-b" onclick="switchAnalysisTab('b')">Option B: Upload Food Image</button>
+      </div>
+
+      <!-- OPTION A: MANUAL ENTRY -->
+      <div id="panel-opt-a" class="analysis-panel active">
+        <div class="form-group">
+          <label class="form-label" for="manual-input">Enter your meal items and quantities:</label>
+          <div style="display: flex; gap: 0.8rem; margin-bottom: 0.8rem;">
+            <input type="text" id="manual-input" class="input-text" placeholder="e.g., 2 rotis, 150g cooked rice, 100g dal and 1 banana" value="2 rotis, 150g cooked rice, 100g dal and 1 banana">
+            <button class="btn btn-secondary btn-sm" onclick="setExampleMeal()" style="white-space: nowrap;">Use Example Meal</button>
+          </div>
+          <button class="btn" id="btn-analyze-manual" onclick="analyzeManualMeal()">Analyze Food</button>
+        </div>
+      </div>
+
+      <!-- OPTION B: IMAGE RECOGNITION -->
+      <div id="panel-opt-b" class="analysis-panel">
+        <div class="form-group">
+          <label class="form-label">Upload a food photograph to identify meal components with AI:</label>
+          <div class="upload-area" onclick="document.getElementById('file-upload').click()">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
+            <p style="font-weight: 500;">Click to upload food photo or drag and drop</p>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">Supported formats: JPG, JPEG, PNG</p>
+            <input type="file" id="file-upload" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="handleFileSelect(event)">
+          </div>
+
+          <div style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="check-sample-img" onchange="toggleSampleImage(this)">
+            <label for="check-sample-img" style="font-size: 0.9rem; cursor: pointer;">Or test with VitaBite sample thali image</label>
+          </div>
+
+          <div id="img-preview-box" class="preview-box">
+            <img id="img-preview" src="" alt="Preview">
+          </div>
+
+          <button class="btn" id="btn-analyze-image" onclick="analyzeFoodImage()">Analyze Image</button>
+        </div>
+
+        <!-- Confirmation & Edit Table -->
+        <div id="detected-confirmation-section" style="display: none; margin-top: 2rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px;">
+          <h4 style="font-size: 1.1rem; margin-bottom: 0.4rem;">Confirm Detected Food Items & Quantities</h4>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.2rem;">Review or adjust the AI-detected items and quantities below before calculating nutritional values:</p>
+
+          <div class="table-container">
+            <table id="confirm-items-table">
+              <thead>
+                <tr>
+                  <th>Food Item</th>
+                  <th style="width: 140px;">Quantity</th>
+                  <th style="width: 160px;">Unit</th>
+                  <th style="width: 80px;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="confirm-items-tbody"></tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; gap: 0.8rem; align-items: center;">
+            <button class="btn btn-secondary btn-sm" onclick="addCustomItemRow()">+ Add Item</button>
+            <button class="btn" id="btn-confirm-calc" onclick="calculateConfirmedNutrition()">Confirm & Calculate Nutrition</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS SECTION -->
+      <div id="results-section" style="display: none; margin-top: 3rem;">
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <h3 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem;">Nutrition Results</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Calculated based on verified food nutrition data and portion weights.</p>
+
+        <!-- 4 Metric Cards -->
+        <div class="macro-grid">
+          <div class="macro-card">
+            <div class="macro-title">Calories</div>
+            <div class="macro-val"><span id="val-calories">0</span><span class="macro-unit">kcal</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Protein</div>
+            <div class="macro-val"><span id="val-protein">0</span><span class="macro-unit">g</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Carbohydrates</div>
+            <div class="macro-val"><span id="val-carbs">0</span><span class="macro-unit">g</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Fat</div>
+            <div class="macro-val"><span id="val-fat">0</span><span class="macro-unit">g</span></div>
+          </div>
+        </div>
+
+        <div class="results-layout">
+          <div>
+            <h4 style="margin-bottom: 0.8rem;">Meal Breakdown</h4>
+            <div class="table-container">
+              <table id="breakdown-table">
+                <thead>
+                  <tr>
+                    <th>Food Item</th>
+                    <th>Serving</th>
+                    <th>State</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody id="breakdown-tbody"></tbody>
+              </table>
+            </div>
+
+            <div id="meal-total-summary" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.9rem;">
+            </div>
+          </div>
+
+          <div>
+            <h4 style="margin-bottom: 0.8rem;">Macronutrient Distribution</h4>
+            <div id="macro-chart" style="width: 100%; height: 320px; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;"></div>
+          </div>
+        </div>
+
+        <!-- AI Nutrition Suggestions -->
+        <div id="suggestions-wrap" style="margin-top: 2.5rem;">
+          <h3 style="font-size: 1.4rem; margin-bottom: 0.4rem;">AI Nutrition Suggestions</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Personalized dietary balance and affordable staple recommendations.</p>
+
+          <div class="suggestion-grid">
+            <div class="suggestion-box">
+              <div class="suggestion-label">1. Protein Balance Assessment</div>
+              <div class="suggestion-text" id="sug-protein">...</div>
+            </div>
+            <div class="suggestion-box">
+              <div class="suggestion-label">2. Meal Improvements</div>
+              <div class="suggestion-text" id="sug-improvements">...</div>
+            </div>
+            <div class="suggestion-box">
+              <div class="suggestion-label">3. Affordable Food Alternatives</div>
+              <div class="suggestion-text" id="sug-alternatives">...</div>
+            </div>
+            <div class="suggestion-box">
+              <div class="suggestion-label">4. Balanced Additions</div>
+              <div class="suggestion-text" id="sug-additions">...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          <strong>Medical Disclaimer:</strong> VitaBite provides nutritional estimates for educational and lifestyle guidance only. 
+          It is not intended as medical advice, clinical dietary assessment, or diagnosis of nutritional deficiencies.
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: ABOUT -->
+    <section id="page-about" class="page-view">
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.4rem;">About VitaBite</h2>
+      <p style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 2rem;">Minimalist, transparent nutrition intelligence powered by verified nutritional data and Google Gemini AI.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div class="feature-card">
+          <h3 style="margin-bottom: 0.8rem;">Our Philosophy</h3>
+          <p style="color: var(--text-secondary); line-height: 1.6;">
+            Most nutrition apps are cluttered with aggressive ads, gamification, and fluorescent charts. 
+            <strong>VitaBite</strong> is built for those who value clarity, elegance, and verified data.
+          </p>
+          <p style="color: var(--text-secondary); line-height: 1.6; margin-top: 0.8rem;">
+            We combine deterministic, laboratory-backed food compositions with the natural language and computer vision strengths of Google Gemini AI.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3 style="margin-bottom: 0.8rem;">Data Transparency</h3>
+          <p style="color: var(--text-secondary); line-height: 1.6;">
+            We never guess without telling you. Common Indian staples are verified against standard food composition tables. 
+            Raw and cooked states (like uncooked rice vs. boiled rice) are clearly distinguished.
+          </p>
+          <p style="color: var(--text-secondary); line-height: 1.6; margin-top: 0.8rem;">
+            When an ingredient is uncataloged, Gemini provides an approximate estimation clearly labeled as <em>AI-estimated</em>.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <h3 style="margin-bottom: 0.8rem;">Verified Staples in Database</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+          Rice (Cooked & Raw), Roti / Chapati, Dal / Lentils (Cooked & Raw), Sattu (Roasted Gram Flour), Paneer (Raw & Cooked), Soya Chunks (Boiled & Raw), Milk (Cow & Full Cream), Oats, Potato (Boiled), Banana, Curd / Yogurt, Peanut Butter, Boiled Eggs, Chicken Breast, Chana, Idli, Dosa, Poha, Upma, etc.
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- API Key Modal -->
+  <div id="key-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 0.5rem;">Gemini API Key</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.2rem;">
+        Add your Google Gemini API key to enable live AI image recognition and dynamic suggestions. The key is saved locally in your browser session.
+      </p>
+      <input type="password" id="modal-key-input" class="input-text" placeholder="AIzaSy..." style="margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: flex-end; gap: 0.8rem;">
+        <button class="btn btn-secondary btn-sm" onclick="closeKeyModal()">Cancel</button>
+        <button class="btn btn-sm" onclick="saveApiKey()">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div>
+        <strong>VitaBite</strong> &mdash; Eat Better. Understand Your Nutrition.
+      </div>
+      <div>
+        &copy; 2026 VitaBite. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Navigation routing
+    function switchNav(page) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      const targetPage = document.getElementById(`page-${page}`);
+      const targetBtn = document.getElementById(`btn-nav-${page}`);
+
+      if (targetPage) targetPage.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Sub tabs in analysis
+    function switchAnalysisTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.analysis-panel').forEach(p => p.classList.remove('active'));
+
+      document.getElementById(`tab-opt-${tab}`).classList.add('active');
+      document.getElementById(`panel-opt-${tab}`).classList.add('active');
+    }
+
+    // Prefill example
+    function setExampleMeal() {
+      document.getElementById('manual-input').value = "2 rotis, 150g cooked rice, 100g dal and 1 banana";
+    }
+
+    // API Key handling
+    function openKeyModal() {
+      document.getElementById('modal-key-input').value = localStorage.getItem('vitabite_gemini_key') || '';
+      document.getElementById('key-modal').classList.add('active');
+    }
+
+    function closeKeyModal() {
+      document.getElementById('key-modal').classList.remove('active');
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById('modal-key-input').value.trim();
+      if (val) {
+        localStorage.setItem('vitabite_gemini_key', val);
+      } else {
+        localStorage.removeItem('vitabite_gemini_key');
+      }
+      closeKeyModal();
+    }
+
+    function getApiKey() {
+      return localStorage.getItem('vitabite_gemini_key') || '';
+    }
+
+    // Image handling
+    let currentImageFile = null;
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        currentImageFile = file;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('img-preview').src = evt.target.result;
+          document.getElementById('img-preview-box').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        document.getElementById('check-sample-img').checked = false;
+      }
+    }
+
+    function toggleSampleImage(cb) {
+      if (cb.checked) {
+        currentImageFile = null;
+        document.getElementById('img-preview').src = '/assets/sample_meal.jpg';
+        document.getElementById('img-preview-box').style.display = 'block';
+      } else {
+        document.getElementById('img-preview-box').style.display = 'none';
+      }
+    }
+
+    // Render results
+    function renderResults(data) {
+      const totals = data.totals;
+      const items = data.items;
+      const suggestions = data.suggestions;
+
+      document.getElementById('val-calories').innerText = totals.calories;
+      document.getElementById('val-protein').innerText = totals.protein;
+      document.getElementById('val-carbs').innerText = totals.carbohydrates;
+      document.getElementById('val-fat').innerText = totals.fat;
+
+      // Table
+      const tbody = document.getElementById('breakdown-tbody');
+      tbody.innerHTML = '';
+      items.forEach(itm => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${itm.display_name}</strong></td>
+          <td>${itm.quantity} ${itm.unit} (${itm.weight_g}g)</td>
+          <td>${itm.state}</td>
+          <td>${itm.calories} kcal</td>
+          <td>${itm.protein} g</td>
+          <td>${itm.carbohydrates} g</td>
+          <td>${itm.fat} g</td>
+          <td><span class="badge">${itm.source}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Total summary bar
+      document.getElementById('meal-total-summary').innerHTML = `
+        <strong>Meal Total:</strong> ${totals.weight_g}g portion &bull; 
+        <strong>${totals.calories} kcal</strong> &bull; 
+        <strong>${totals.protein}g</strong> Protein &bull; 
+        <strong>${totals.carbohydrates}g</strong> Carbs &bull; 
+        <strong>${totals.fat}g</strong> Fat
+      `;
+
+      // Monochromatic Chart
+      renderPlotlyChart(totals);
+
+      // Suggestions
+      if (suggestions) {
+        document.getElementById('sug-protein').innerText = suggestions.protein_status || 'Balanced protein';
+        document.getElementById('sug-improvements').innerText = suggestions.meal_improvements || 'Healthy portioning.';
+        document.getElementById('sug-alternatives').innerText = suggestions.affordable_alternatives || 'Sattu, soya chunks, boiled eggs.';
+        document.getElementById('sug-additions').innerText = suggestions.balanced_additions || 'Add cucumber slices or curd.';
+      }
+
+      document.getElementById('results-section').style.display = 'block';
+      document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Monochromatic Donut Chart
+    function renderPlotlyChart(totals) {
+      const pKcal = totals.protein * 4;
+      const cKcal = totals.carbohydrates * 4;
+      const fKcal = totals.fat * 9;
+
+      const data = [{
+        values: [pKcal, cKcal, fKcal],
+        labels: ['Protein', 'Carbohydrates', 'Fat'],
+        type: 'pie',
+        hole: 0.65,
+        marker: {
+          colors: ['#111111', '#666666', '#AAAAAA'],
+          line: { color: '#FFFFFF', width: 2 }
+        },
+        textinfo: 'label+percent',
+        hoverinfo: 'label+value+percent',
+        hovertemplate: '<b>%{label}</b><br>Calories: %{value:.1f} kcal<br>%{percent}<extra></extra>',
+        textfont: { family: 'sans-serif', size: 12, color: '#111111' }
+      }];
+
+      const layout = {
+        title: { text: 'Macronutrient Energy Distribution', font: { size: 13, color: '#111111' } },
+        paper_bgcolor: '#FFFFFF',
+        plot_bgcolor: '#FFFFFF',
+        margin: { t: 40, b: 20, l: 10, r: 10 },
+        showlegend: true,
+        legend: { orientation: 'h', y: -0.1, xanchor: 'center', x: 0.5, font: { color: '#777777', size: 11 } }
+      };
+
+      Plotly.newPlot('macro-chart', data, layout, { responsive: true, displayModeBar: false });
+    }
+
+    // Option A API Call
+    async function analyzeManualMeal() {
+      const text = document.getElementById('manual-input').value.trim();
+      if (!text) {
+        alert("Please enter a meal description.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-analyze-manual');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span> Analyzing...`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/analyze-manual', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            api_key: getApiKey()
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Analysis error');
+        renderResults(data);
+      } catch (err) {
+        alert("Error analyzing meal: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Option B API Call: Step 1 Image Analysis
+    async function analyzeFoodImage() {
+      const useSample = document.getElementById('check-sample-img').checked;
+      if (!currentImageFile && !useSample) {
+        alert("Please select an image file or check the sample image option.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-analyze-image');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span> AI Recognizing...`;
+      btn.disabled = true;
+
+      const formData = new FormData();
+      if (currentImageFile) {
+        formData.append('file', currentImageFile);
+      }
+      formData.append('use_sample', useSample);
+      if (getApiKey()) {
+        formData.append('api_key', getApiKey());
+      }
+
+      try {
+        const res = await fetch('/api/analyze-image', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Recognition error');
+
+        populateConfirmationTable(data.detected_items);
+      } catch (err) {
+        alert("Error analyzing image: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Confirmation table manipulation
+    function populateConfirmationTable(items) {
+      const tbody = document.getElementById('confirm-items-tbody');
+      tbody.innerHTML = '';
+
+      items.forEach(itm => {
+        addItemRow(itm.food_name, itm.quantity, itm.unit);
+      });
+
+      const section = document.getElementById('detected-confirmation-section');
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function addItemRow(name = '', qty = 1, unit = 'piece') {
+      const tbody = document.getElementById('confirm-items-tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="input-text item-name" value="${name}" style="padding: 0.4rem 0.6rem;"></td>
+        <td><input type="number" step="0.5" class="input-text item-qty" value="${qty}" style="padding: 0.4rem 0.6rem;"></td>
+        <td>
+          <select class="input-text item-unit" style="padding: 0.4rem 0.6rem;">
+            <option value="piece" ${unit === 'piece' ? 'selected' : ''}>piece / roti / slice</option>
+            <option value="g" ${unit === 'g' || unit === 'grams' ? 'selected' : ''}>grams (g)</option>
+            <option value="cup" ${unit === 'cup' ? 'selected' : ''}>cup</option>
+            <option value="bowl" ${unit === 'bowl' || unit === 'katori' ? 'selected' : ''}>bowl / katori</option>
+            <option value="tbsp" ${unit === 'tbsp' ? 'selected' : ''}>tablespoon (tbsp)</option>
+            <option value="glass" ${unit === 'glass' ? 'selected' : ''}>glass</option>
+            <option value="serving" ${unit === 'serving' ? 'selected' : ''}>serving</option>
+          </select>
+        </td>
+        <td><button class="btn btn-secondary btn-sm" onclick="this.closest('tr').remove()" style="padding: 0.3rem 0.6rem;">&times;</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function addCustomItemRow() {
+      addItemRow('Rice (Cooked)', 150, 'g');
+    }
+
+    // Step 2: Confirm & Calculate
+    async function calculateConfirmedNutrition() {
+      const rows = document.querySelectorAll('#confirm-items-tbody tr');
+      const items = [];
+
+      rows.forEach(r => {
+        const name = r.querySelector('.item-name').value.trim();
+        const qty = parseFloat(r.querySelector('.item-qty').value) || 1;
+        const unit = r.querySelector('.item-unit').value;
+        if (name) {
+          items.push({ food_name: name, quantity: qty, unit: unit });
+        }
+      });
+
+      if (items.length === 0) {
+        alert("Please add at least one food item.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirm-calc');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span> Calculating...`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/calculate-nutrition', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: items,
+            api_key: getApiKey()
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Calculation error');
+        renderResults(data);
+      } catch (err) {
+        alert("Calculation error: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
