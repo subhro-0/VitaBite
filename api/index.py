@@ -41,6 +41,25 @@ app.add_middleware(
 )
 
 
+from utils.planner import calculate_daily_macro_needs, generate_budget_meal_plan
+
+
+class MacroCalcRequest(BaseModel):
+    age: int
+    gender: str
+    weight_kg: float
+    height_cm: float
+    activity_level: str = "moderate"
+    goal: str = "maintain"
+
+
+class BudgetPlannerRequest(BaseModel):
+    daily_budget_inr: float
+    target_calories: Optional[float] = None
+    target_protein: Optional[float] = None
+    dietary_pref: str = "any"
+
+
 class ManualAnalyzeRequest(BaseModel):
     text: str
     api_key: Optional[str] = None
@@ -186,3 +205,37 @@ def calculate_nutrition(payload: CalculateRequest):
         "totals": totals,
         "suggestions": suggestions,
     }
+
+
+@app.post("/macro-calculator")
+@app.post("/api/macro-calculator")
+def macro_calculator(payload: MacroCalcRequest):
+    """
+    Calculates BMR, TDEE, and daily target calories, protein, carbs, and fats
+    based on age, gender, height, weight, activity level, and goal.
+    """
+    res = calculate_daily_macro_needs(
+        age=payload.age,
+        gender=payload.gender,
+        weight_kg=payload.weight_kg,
+        height_cm=payload.height_cm,
+        activity_level=payload.activity_level,
+        goal=payload.goal,
+    )
+    return {"status": "success", "results": res}
+
+
+@app.post("/budget-planner")
+@app.post("/api/budget-planner")
+def budget_planner(payload: BudgetPlannerRequest):
+    """
+    Generates a daily meal plan that optimizes nutrient density
+    strictly within the user's daily budget (INR).
+    """
+    res = generate_budget_meal_plan(
+        daily_budget_inr=payload.daily_budget_inr,
+        target_calories=payload.target_calories,
+        target_protein=payload.target_protein,
+        dietary_pref=payload.dietary_pref,
+    )
+    return {"status": "success", "plan": res}

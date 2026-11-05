@@ -105,6 +105,21 @@ class TestVitaBiteCore(unittest.TestCase):
         self.assertIn("balanced_additions", suggestions)
         self.assertIn("sattu", suggestions["affordable_alternatives"].lower())
 
+    def test_macro_calculator(self):
+        from utils.planner import calculate_daily_macro_needs
+        res = calculate_daily_macro_needs(25, "male", 70.0, 175.0, "moderate", "maintain")
+        self.assertGreater(res["bmr"], 1500)
+        self.assertGreater(res["tdee"], 2200)
+        self.assertGreater(res["target_protein_g"], 90.0)
+
+    def test_budget_planner(self):
+        from utils.planner import generate_budget_meal_plan
+        plan = generate_budget_meal_plan(100.0, target_calories=2000, target_protein=80, dietary_pref="veg")
+        self.assertLessEqual(plan["total_cost_inr"], 100.0)
+        self.assertGreater(plan["total_calories"], 1000)
+        self.assertGreater(plan["total_protein_g"], 50.0)
+        self.assertGreater(len(plan["items"]), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

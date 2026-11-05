@@ -561,6 +561,8 @@
       <ul class="nav-links">
         <li><button class="nav-btn active" id="btn-nav-home" onclick="switchNav('home')">Home</button></li>
         <li><button class="nav-btn" id="btn-nav-analysis" onclick="switchNav('analysis')">Food Analysis</button></li>
+        <li><button class="nav-btn" id="btn-nav-calculator" onclick="switchNav('calculator')">Macro Calculator</button></li>
+        <li><button class="nav-btn" id="btn-nav-budget" onclick="switchNav('budget')">Budget Planner</button></li>
         <li><button class="nav-btn" id="btn-nav-about" onclick="switchNav('about')">About</button></li>
         <li><button class="btn-key" onclick="openKeyModal()">⚙ API Key</button></li>
       </ul>
@@ -760,6 +762,183 @@
         <div class="disclaimer">
           <strong>Medical Disclaimer:</strong> VitaBite provides nutritional estimates for educational and lifestyle guidance only. 
           It is not intended as medical advice, clinical dietary assessment, or diagnosis of nutritional deficiencies.
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: MACRO CALCULATOR -->
+    <section id="page-calculator" class="page-view">
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.4rem;">Personal Nutrition Calculator</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Calculate your daily caloric energy expenditure (TDEE) and optimal protein, carbs, and fat distribution.</p>
+
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; max-width: 800px; margin-bottom: 2.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Age (years)</label>
+            <input type="number" id="calc-age" class="input-text" value="25" min="12" max="100">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Gender</label>
+            <select id="calc-gender" class="input-text">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" step="0.5" id="calc-weight" class="input-text" value="70" min="30" max="250">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Height (cm)</label>
+            <input type="number" step="1" id="calc-height" class="input-text" value="175" min="100" max="250">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.8rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Daily Activity Level</label>
+            <select id="calc-activity" class="input-text">
+              <option value="sedentary">Sedentary (Desk job, little exercise)</option>
+              <option value="light">Lightly Active (1-3 days/week exercise)</option>
+              <option value="moderate" selected>Moderately Active (3-5 days/week exercise)</option>
+              <option value="very_active">Very Active (6-7 days/week intense training)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Primary Goal</label>
+            <select id="calc-goal" class="input-text">
+              <option value="maintain" selected>Maintain Weight & Health</option>
+              <option value="fat_loss">Mild Fat Loss & Definition (-400 kcal)</option>
+              <option value="muscle_gain">Lean Muscle Growth (+350 kcal)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" id="btn-calculate-macros" onclick="calculateUserMacros()">Calculate Daily Targets</button>
+      </div>
+
+      <!-- Macro Results -->
+      <div id="calc-results-section" style="display: none;">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem;">Your Daily Macronutrient Targets</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Science-backed estimation using the Mifflin-St Jeor metabolic standard.</p>
+
+        <div class="macro-grid">
+          <div class="macro-card">
+            <div class="macro-title">Target Calories</div>
+            <div class="macro-val"><span id="target-cals">0</span><span class="macro-unit">kcal/day</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Daily Protein</div>
+            <div class="macro-val"><span id="target-prot">0</span><span class="macro-unit">g/day</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Daily Carbohydrates</div>
+            <div class="macro-val"><span id="target-carbs">0</span><span class="macro-unit">g/day</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Daily Fats</div>
+            <div class="macro-val"><span id="target-fat">0</span><span class="macro-unit">g/day</span></div>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap: 1rem;">
+          <div>
+            <div style="font-size: 0.95rem; font-weight: 600;">Metabolic Breakdown:</div>
+            <div style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.2rem;">
+              Basal Metabolic Rate (BMR): <strong id="val-bmr" style="color: var(--text-primary);">0</strong> kcal &bull; 
+              Total Daily Maintenance (TDEE): <strong id="val-tdee" style="color: var(--text-primary);">0</strong> kcal
+            </div>
+          </div>
+          <button class="btn" onclick="transferTargetsToBudgetPlanner()">Plan Meals Within My Budget &rarr;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: BUDGET MEAL PLANNER -->
+    <section id="page-budget" class="page-view">
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.4rem;">Budget-Friendly Nutrition Planner</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Fulfill your calorie and protein targets strictly within your daily food budget using verified affordable Indian staples.</p>
+
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; max-width: 800px; margin-bottom: 2.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Daily Food Budget (₹ INR)</label>
+            <input type="number" id="budget-amount" class="input-text" value="120" min="30" max="2000" placeholder="e.g. 100, 150">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Dietary Preference</label>
+            <select id="budget-diet" class="input-text">
+              <option value="any">Any (Include Eggs & Meat)</option>
+              <option value="veg" selected>Vegetarian (Dairy & Plant)</option>
+              <option value="egg">Eggetarian (Vegetarian + Eggs)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.8rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Target Calories (Optional)</label>
+            <input type="number" id="budget-target-cals" class="input-text" placeholder="e.g. 2200">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Target Protein in grams (Optional)</label>
+            <input type="number" id="budget-target-prot" class="input-text" placeholder="e.g. 80">
+          </div>
+        </div>
+
+        <button class="btn" id="btn-generate-budget" onclick="generateBudgetMealPlan()">Generate Budget Meal Plan</button>
+      </div>
+
+      <!-- Budget Results -->
+      <div id="budget-results-section" style="display: none;">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem;">Optimized Daily Meal Plan</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">High-density Indian staples maximizing protein and energy per rupee spent.</p>
+
+        <div class="macro-grid">
+          <div class="macro-card">
+            <div class="macro-title">Daily Cost</div>
+            <div class="macro-val">₹<span id="plan-cost">0</span><span class="macro-unit">/ ₹<span id="plan-budget-limit">0</span></span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Total Calories</div>
+            <div class="macro-val"><span id="plan-cals">0</span><span class="macro-unit">kcal</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Total Protein</div>
+            <div class="macro-val"><span id="plan-prot">0</span><span class="macro-unit">g</span></div>
+          </div>
+          <div class="macro-card">
+            <div class="macro-title">Target Fulfillment</div>
+            <div class="macro-val"><span id="plan-fulfillment">100%</span><span class="macro-unit">goal</span></div>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: 0.8rem;">Suggested Affordable Food Items</h4>
+        <div class="table-container">
+          <table id="budget-items-table">
+            <thead>
+              <tr>
+                <th>Food Item</th>
+                <th>Serving</th>
+                <th>Meal Window</th>
+                <th>Estimated Cost</th>
+                <th>Calories</th>
+                <th>Protein</th>
+                <th>Why It Fits</th>
+              </tr>
+            </thead>
+            <tbody id="budget-items-tbody"></tbody>
+          </table>
+        </div>
+
+        <div style="background: var(--bg-secondary); border-left: 3px solid var(--text-primary); border-radius: 0 6px 6px 0; padding: 1.2rem 1.4rem; margin-top: 1.5rem;">
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.3rem;">Budget Nutrition Strategy</div>
+          <div style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.5;">
+            By anchoring your diet around <strong>sattu (roasted gram)</strong>, <strong>boiled soya chunks</strong>, and <strong>dal + roti combos</strong>, you achieve over 80-100g of verified protein for under ₹120-150 daily, without needing expensive commercial protein supplements.
+          </div>
         </div>
       </div>
     </section>
@@ -1165,6 +1344,135 @@
         renderResults(data);
       } catch (err) {
         alert("Calculation error: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // ------------------ FEATURE: MACRO CALCULATOR ------------------
+    let lastCalculatedMacros = null;
+
+    async function calculateUserMacros() {
+      const age = parseInt(document.getElementById('calc-age').value) || 25;
+      const gender = document.getElementById('calc-gender').value;
+      const weight = parseFloat(document.getElementById('calc-weight').value) || 70;
+      const height = parseFloat(document.getElementById('calc-height').value) || 175;
+      const activity = document.getElementById('calc-activity').value;
+      const goal = document.getElementById('calc-goal').value;
+
+      const btn = document.getElementById('btn-calculate-macros');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span> Calculating...`;
+      btn.disabled = true;
+
+      try {
+        const res = await callApi('/api/macro-calculator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            age: age,
+            gender: gender,
+            weight_kg: weight,
+            height_cm: height,
+            activity_level: activity,
+            goal: goal
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Calculation error');
+
+        const r = data.results;
+        lastCalculatedMacros = r;
+
+        document.getElementById('target-cals').innerText = r.target_calories;
+        document.getElementById('target-prot').innerText = r.target_protein_g;
+        document.getElementById('target-carbs').innerText = r.target_carbs_g;
+        document.getElementById('target-fat').innerText = r.target_fat_g;
+        document.getElementById('val-bmr').innerText = r.bmr;
+        document.getElementById('val-tdee').innerText = r.tdee;
+
+        const resultsSection = document.getElementById('calc-results-section');
+        resultsSection.style.display = 'block';
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert("Error calculating macros: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function transferTargetsToBudgetPlanner() {
+      if (lastCalculatedMacros) {
+        document.getElementById('budget-target-cals').value = lastCalculatedMacros.target_calories;
+        document.getElementById('budget-target-prot').value = lastCalculatedMacros.target_protein_g;
+      }
+      switchNav('budget');
+    }
+
+    // ------------------ FEATURE: BUDGET MEAL PLANNER ------------------
+    async function generateBudgetMealPlan() {
+      const budget = parseFloat(document.getElementById('budget-amount').value) || 120;
+      const diet = document.getElementById('budget-diet').value;
+      const targetCals = parseFloat(document.getElementById('budget-target-cals').value) || null;
+      const targetProt = parseFloat(document.getElementById('budget-target-prot').value) || null;
+
+      const btn = document.getElementById('btn-generate-budget');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span> Optimizing Diet...`;
+      btn.disabled = true;
+
+      try {
+        const res = await callApi('/api/budget-planner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            daily_budget_inr: budget,
+            target_calories: targetCals,
+            target_protein: targetProt,
+            dietary_pref: diet
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Planning error');
+
+        const plan = data.plan;
+
+        document.getElementById('plan-cost').innerText = plan.total_cost_inr;
+        document.getElementById('plan-budget-limit').innerText = plan.budget_inr;
+        document.getElementById('plan-cals').innerText = plan.total_calories;
+        document.getElementById('plan-prot').innerText = plan.total_protein_g;
+
+        const fulfillmentText = plan.target_protein_fulfillment_pct 
+          ? `${plan.target_protein_fulfillment_pct}% Prot`
+          : 'Optimized';
+        document.getElementById('plan-fulfillment').innerText = fulfillmentText;
+
+        // Render food items table
+        const tbody = document.getElementById('budget-items-tbody');
+        tbody.innerHTML = '';
+        plan.items.forEach(itm => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${itm.name}</strong></td>
+            <td>${itm.serving}</td>
+            <td><span class="badge">${itm.meal_type}</span></td>
+            <td><strong>₹${itm.price_inr}</strong></td>
+            <td>${itm.calories} kcal</td>
+            <td>${itm.protein}g</td>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">${itm.why}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const budgetResults = document.getElementById('budget-results-section');
+        budgetResults.style.display = 'block';
+        budgetResults.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        alert("Error generating meal plan: " + err.message);
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;

@@ -21,6 +21,10 @@ from utils.nutrition import (
     get_nutrition_db,
     parse_natural_language_fallback,
 )
+from utils.planner import (
+    calculate_daily_macro_needs,
+    generate_budget_meal_plan,
+)
 
 # Load environment variables
 load_dotenv()
@@ -327,7 +331,7 @@ def get_active_api_key() -> str:
 
 def render_navbar():
     """Renders the top minimal navigation bar."""
-    col_logo, col_nav = st.columns([1.5, 2.5])
+    col_logo, col_nav = st.columns([1.1, 2.9])
 
     with col_logo:
         st.markdown(
@@ -341,16 +345,24 @@ def render_navbar():
         )
 
     with col_nav:
-        n1, n2, n3 = st.columns(3)
+        n1, n2, n3, n4, n5 = st.columns(5)
         with n1:
             if st.button("Home", key="nav_home", use_container_width=True):
                 st.session_state.nav_page = "Home"
                 st.rerun()
         with n2:
-            if st.button("Food Analysis", key="nav_analysis", use_container_width=True):
+            if st.button("Analysis", key="nav_analysis", use_container_width=True):
                 st.session_state.nav_page = "Food Analysis"
                 st.rerun()
         with n3:
+            if st.button("Calculator", key="nav_calculator", use_container_width=True):
+                st.session_state.nav_page = "Macro Calculator"
+                st.rerun()
+        with n4:
+            if st.button("Budget", key="nav_budget", use_container_width=True):
+                st.session_state.nav_page = "Budget Planner"
+                st.rerun()
+        with n5:
             if st.button("About", key="nav_about", use_container_width=True):
                 st.session_state.nav_page = "About"
                 st.rerun()
@@ -925,6 +937,211 @@ def render_footer():
     )
 
 
+def render_macro_calculator_page():
+    """Renders the Personal Nutrition (TDEE & Macro) Calculator page."""
+    st.markdown("<h2 style='font-size: 2rem; font-weight: 800; color: #111111;'>Personal Nutrition Calculator</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #777777; font-size: 0.95rem; margin-bottom: 2rem;'>Calculate your daily caloric energy expenditure (TDEE) and optimal protein, carbs, and fat distribution.</p>", unsafe_allow_html=True)
+
+    with st.container():
+        c1, c2 = st.columns(2)
+        with c1:
+            age = st.number_input("Age (years)", min_value=12, max_value=100, value=25)
+            weight = st.number_input("Weight (kg)", min_value=30.0, max_value=250.0, value=70.0, step=0.5)
+            activity = st.selectbox(
+                "Daily Activity Level",
+                options=["sedentary", "light", "moderate", "very_active"],
+                format_func=lambda x: {
+                    "sedentary": "Sedentary (Desk job, minimal movement)",
+                    "light": "Lightly Active (1-3 days/week exercise)",
+                    "moderate": "Moderately Active (3-5 days/week exercise)",
+                    "very_active": "Very Active (6-7 days/week hard training)",
+                }[x],
+                index=2,
+            )
+        with c2:
+            gender = st.selectbox("Gender", options=["male", "female"], format_func=lambda x: x.capitalize())
+            height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=175.0, step=1.0)
+            goal = st.selectbox(
+                "Primary Goal",
+                options=["maintain", "fat_loss", "muscle_gain"],
+                format_func=lambda x: {
+                    "maintain": "Maintain Weight & Overall Health",
+                    "fat_loss": "Mild Fat Loss & Definition (-400 kcal)",
+                    "muscle_gain": "Lean Muscle Growth (+350 kcal)",
+                }[x],
+            )
+
+        if st.button("Calculate Daily Targets", type="primary"):
+            res = calculate_daily_macro_needs(
+                age=int(age),
+                gender=gender,
+                weight_kg=float(weight),
+                height_cm=float(height),
+                activity_level=activity,
+                goal=goal,
+            )
+            st.session_state.calculated_macros = res
+
+    if "calculated_macros" in st.session_state and st.session_state.calculated_macros:
+        res = st.session_state.calculated_macros
+        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+        st.markdown("### Your Daily Targets")
+
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Target Calories</div>
+                    <div class="vb-card-value">{res['target_calories']}<span class="vb-card-unit">kcal/d</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with m2:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Daily Protein</div>
+                    <div class="vb-card-value">{res['target_protein_g']}<span class="vb-card-unit">g/d</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with m3:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Carbohydrates</div>
+                    <div class="vb-card-value">{res['target_carbs_g']}<span class="vb-card-unit">g/d</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with m4:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Daily Fats</div>
+                    <div class="vb-card-value">{res['target_fat_g']}<span class="vb-card-unit">g/d</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown(
+            f"""
+            <div style="background-color: #F8F8F8; border: 1px solid #E5E5E5; border-radius: 6px; padding: 1rem; margin-top: 1rem; font-size: 0.9rem;">
+                <strong>Metabolic Breakdown:</strong> Basal Metabolic Rate (BMR) is <strong>{res['bmr']} kcal</strong> &bull; Total Daily Energy Expenditure (TDEE) is <strong>{res['tdee']} kcal</strong>.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button("Plan Meals Within My Budget Using These Targets &rarr;"):
+            st.session_state.budget_target_cals = res["target_calories"]
+            st.session_state.budget_target_prot = res["target_protein_g"]
+            st.session_state.nav_page = "Budget Planner"
+            st.rerun()
+
+
+def render_budget_planner_page():
+    """Renders the Budget-Friendly Nutrition Planner page."""
+    st.markdown("<h2 style='font-size: 2rem; font-weight: 800; color: #111111;'>Budget-Friendly Nutrition Planner</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #777777; font-size: 0.95rem; margin-bottom: 2rem;'>Fulfill your calorie and protein targets strictly within your daily food budget using verified affordable Indian staples.</p>", unsafe_allow_html=True)
+
+    with st.container():
+        b1, b2 = st.columns(2)
+        with b1:
+            budget = st.number_input("Daily Food Budget (₹ INR)", min_value=30.0, max_value=2000.0, value=120.0, step=10.0)
+            pref = st.selectbox(
+                "Dietary Preference",
+                options=["veg", "egg", "any"],
+                format_func=lambda x: {
+                    "veg": "Vegetarian (Dairy & Plant)",
+                    "egg": "Eggetarian (Vegetarian + Eggs)",
+                    "any": "Any (Include Eggs & Poultry)",
+                }[x],
+            )
+        with b2:
+            default_cals = float(st.session_state.get("budget_target_cals", 2200))
+            default_prot = float(st.session_state.get("budget_target_prot", 80))
+            target_cals = st.number_input("Target Daily Calories (Optional)", value=default_cals, step=50.0)
+            target_prot = st.number_input("Target Daily Protein in grams (Optional)", value=default_prot, step=5.0)
+
+        if st.button("Generate Budget Meal Plan", type="primary"):
+            plan = generate_budget_meal_plan(
+                daily_budget_inr=budget,
+                target_calories=target_cals,
+                target_protein=target_prot,
+                dietary_pref=pref,
+            )
+            st.session_state.current_budget_plan = plan
+
+    if "current_budget_plan" in st.session_state and st.session_state.current_budget_plan:
+        plan = st.session_state.current_budget_plan
+        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+        st.markdown("### Optimized Daily Meal Plan")
+
+        p1, p2, p3, p4 = st.columns(4)
+        with p1:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Daily Cost</div>
+                    <div class="vb-card-value">₹{plan['total_cost_inr']}<span class="vb-card-unit">/ ₹{plan['budget_inr']}</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with p2:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Total Calories</div>
+                    <div class="vb-card-value">{plan['total_calories']}<span class="vb-card-unit">kcal</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with p3:
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Total Protein</div>
+                    <div class="vb-card-value">{plan['total_protein_g']}<span class="vb-card-unit">g</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with p4:
+            fulfillment_label = f"{plan['target_protein_fulfillment_pct']}% Prot" if plan.get('target_protein_fulfillment_pct') else "Optimized"
+            st.markdown(
+                f"""
+                <div class="vb-card">
+                    <div class="vb-card-title">Fulfillment</div>
+                    <div class="vb-card-value">{fulfillment_label}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("#### Suggested Affordable Food Items")
+        items_df = pd.DataFrame(plan["items"])[["name", "serving", "meal_type", "price_inr", "calories", "protein", "why"]]
+        items_df.columns = ["Food Item", "Serving", "Meal Window", "Estimated Cost (₹)", "Calories", "Protein (g)", "Why It Fits"]
+        st.dataframe(items_df, use_container_width=True, hide_index=True)
+
+        st.markdown(
+            """
+            <div style="background-color: #F8F8F8; border-left: 3px solid #111111; border-radius: 0 6px 6px 0; padding: 1rem 1.2rem; margin-top: 1rem; font-size: 0.9rem;">
+                <strong>Budget Nutrition Strategy:</strong> By anchoring your diet around <strong>sattu (roasted gram)</strong>, 
+                <strong>boiled soya chunks</strong>, and <strong>dal + roti combos</strong>, you achieve over 80-100g of verified protein for under ₹120-150 daily, without needing expensive commercial protein supplements.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 def main():
     render_navbar()
     render_sidebar_settings()
@@ -933,6 +1150,10 @@ def main():
         render_home_page()
     elif st.session_state.nav_page == "Food Analysis":
         render_food_analysis_page()
+    elif st.session_state.nav_page == "Macro Calculator":
+        render_macro_calculator_page()
+    elif st.session_state.nav_page == "Budget Planner":
+        render_budget_planner_page()
     elif st.session_state.nav_page == "About":
         render_about_page()
 
@@ -941,3 +1162,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
