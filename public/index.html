@@ -995,6 +995,23 @@
       Plotly.newPlot('macro-chart', data, layout, { responsive: true, displayModeBar: false });
     }
 
+    // Resilient API Fetch Helper for Vercel Serverless
+    async function callApi(endpoint, options = {}) {
+      const primaryUrl = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+      let res = await fetch(primaryUrl, options);
+      if (res.status === 404) {
+        // Fallback retry without /api prefix in case of Vercel path rewriting
+        const fallbackUrl = primaryUrl.replace(/^\/api/, '');
+        if (fallbackUrl) {
+          const fallbackRes = await fetch(fallbackUrl, options);
+          if (fallbackRes.ok || fallbackRes.status !== 404) {
+            return fallbackRes;
+          }
+        }
+      }
+      return res;
+    }
+
     // Option A API Call
     async function analyzeManualMeal() {
       const text = document.getElementById('manual-input').value.trim();
@@ -1009,7 +1026,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/analyze-manual', {
+        const res = await callApi('/api/analyze-manual', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1052,7 +1069,7 @@
       }
 
       try {
-        const res = await fetch('/api/analyze-image', {
+        const res = await callApi('/api/analyze-image', {
           method: 'POST',
           body: formData
         });
@@ -1134,7 +1151,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/calculate-nutrition', {
+        const res = await callApi('/api/calculate-nutrition', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

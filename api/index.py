@@ -60,11 +60,13 @@ class CalculateRequest(BaseModel):
     api_key: Optional[str] = None
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "app": "VitaBite API"}
 
 
+@app.get("/database")
 @app.get("/api/database")
 def get_database():
     """Returns the verified food database."""
@@ -72,6 +74,7 @@ def get_database():
     return {"count": len(db.df), "foods": db.df.to_dict(orient="records")}
 
 
+@app.post("/analyze-manual")
 @app.post("/api/analyze-manual")
 def analyze_manual(payload: ManualAnalyzeRequest):
     """
@@ -108,6 +111,7 @@ def analyze_manual(payload: ManualAnalyzeRequest):
     }
 
 
+@app.post("/analyze-image")
 @app.post("/api/analyze-image")
 async def analyze_image(
     file: Optional[UploadFile] = File(None),
@@ -159,6 +163,7 @@ async def analyze_image(
     }
 
 
+@app.post("/calculate-nutrition")
 @app.post("/api/calculate-nutrition")
 def calculate_nutrition(payload: CalculateRequest):
     """

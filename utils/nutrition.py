@@ -151,6 +151,46 @@ GENERIC_UNIT_WEIGHTS: Dict[str, float] = {
 }
 
 
+import io
+
+EMBEDDED_NUTRITION_CSV = """food_name,category,state,serving_unit,serving_weight_g,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g
+Roti / Chapati,Grains,Cooked,piece,35,264.0,9.0,55.0,2.5
+Rice (Cooked),Grains,Cooked,cup,158,130.0,2.7,28.2,0.3
+Rice (Raw),Grains,Raw,cup,185,365.0,7.1,80.0,0.7
+Dal / Lentils (Cooked),Pulses,Cooked,bowl,150,116.0,7.0,19.0,2.0
+Dal / Lentils (Raw),Pulses,Raw,cup,100,343.0,24.0,60.0,1.5
+Sattu (Roasted Gram Flour),Flours,Raw,tbsp,15,413.0,25.6,65.0,5.2
+Paneer (Raw),Dairy,Raw,slice,40,296.0,18.3,4.5,23.0
+Paneer (Cooked / Sautéed),Dairy,Cooked,serving,100,320.0,19.0,5.0,25.0
+Soya Chunks (Raw),Protein,Raw,cup,50,345.0,52.0,33.0,0.5
+Soya Chunks (Boiled),Protein,Cooked,cup,120,115.0,17.3,11.0,0.2
+Milk (Cow / Toned),Dairy,Liquid,glass,200,61.0,3.2,4.8,3.3
+Milk (Full Cream),Dairy,Liquid,glass,200,89.0,3.4,5.0,6.5
+Oats (Rolled / Raw),Grains,Raw,cup,40,389.0,16.9,66.3,6.9
+Oats Porridge (Cooked),Grains,Cooked,bowl,200,71.0,2.5,12.0,1.5
+Potato (Boiled),Vegetables,Cooked,medium,130,87.0,1.9,20.1,0.1
+Banana,Fruits,Raw,piece,120,89.0,1.1,22.8,0.3
+Curd / Yogurt (Plain),Dairy,Cooked,bowl,150,61.0,3.5,4.7,3.3
+Peanut Butter,Spreads,Raw,tbsp,16,588.0,25.0,20.0,50.0
+Egg (Boiled),Protein,Cooked,piece,50,155.0,13.0,1.1,11.0
+Egg White (Boiled),Protein,Cooked,piece,33,52.0,10.9,0.7,0.2
+Chicken Breast (Cooked),Meat,Cooked,serving,100,165.0,31.0,0.0,3.6
+Chana / Chickpeas (Boiled),Pulses,Cooked,cup,164,164.0,8.9,27.4,2.6
+Apple,Fruits,Raw,medium,150,52.0,0.3,13.8,0.2
+Almonds,Nuts,Raw,piece,1.2,579.0,21.2,21.6,49.9
+Brown Bread,Bakery,Raw,slice,30,247.0,8.5,46.0,3.4
+White Bread,Bakery,Raw,slice,25,265.0,9.0,49.0,3.2
+Idli (Steamed),South Indian,Cooked,piece,40,140.0,4.0,28.0,0.5
+Dosa (Plain),South Indian,Cooked,piece,80,168.0,3.9,29.0,3.7
+Poha (Cooked),Breakfast,Cooked,bowl,150,130.0,2.4,23.0,3.2
+Upma (Cooked),Breakfast,Cooked,bowl,150,150.0,3.5,25.0,4.0
+Rajma / Kidney Beans (Cooked),Pulses,Cooked,bowl,150,127.0,8.7,22.8,0.5
+Fish Curry,Seafood,Cooked,serving,150,140.0,16.0,3.0,7.0
+Cucumber,Vegetables,Raw,medium,100,15.0,0.7,3.6,0.1
+Tomato,Vegetables,Raw,medium,100,18.0,0.9,3.9,0.2
+Moong Dal Khichdi (Cooked),Mixed,Cooked,bowl,200,120.0,4.2,21.0,2.1
+"""
+
 class NutritionDatabase:
     """Manager for loading and querying nutritional data."""
 
@@ -159,10 +199,21 @@ class NutritionDatabase:
         self.df: pd.DataFrame = self._load_data()
 
     def _load_data(self) -> pd.DataFrame:
-        if not os.path.exists(self.csv_path):
-            raise FileNotFoundError(f"Nutrition dataset not found at {self.csv_path}")
-        df = pd.read_csv(self.csv_path)
-        # Clean column names
+        candidate_paths = [
+            self.csv_path,
+            os.path.join(os.getcwd(), "nutrition_data.csv"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nutrition_data.csv"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "nutrition_data.csv"),
+            "/var/task/nutrition_data.csv",
+        ]
+        for p in candidate_paths:
+            if os.path.exists(p):
+                df = pd.read_csv(p)
+                df.columns = [c.strip().lower() for c in df.columns]
+                return df
+
+        # Fail-safe embedded fallback
+        df = pd.read_csv(io.StringIO(EMBEDDED_NUTRITION_CSV))
         df.columns = [c.strip().lower() for c in df.columns]
         return df
 
